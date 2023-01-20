@@ -11,7 +11,7 @@ import MapKit
 class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDelegate {
     
     var locationManager = CLLocationManager()
-    //var destination: CLLocationCoordinate2D!
+    var locationsArr = [CLLocationCoordinate2D]()
     @IBOutlet weak var map: MKMapView!
     
     var dropPinCount = 1
@@ -99,10 +99,19 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
             
             annotation.coordinate = coordinate
             map.addAnnotation(annotation)
+            
+            // add coordinate to locationArr
+            
+            locationsArr.append(coordinate)
+            
+        }
+        
+        if( dropPinCount == 3){
+            addPolygon()
+            
         }
         
         dropPinCount += 1
-        
         //destination = coordinate
     }
     
@@ -122,37 +131,35 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
         
     }
     
-//    //MARK: - callout accessory control tapped
-//    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
-//        let alertController = UIAlertController(title: "Your Favorite", message: "A nice place to visit", preferredStyle: .alert)
-//        let cancelAction = UIAlertAction(title: "OK", style: .cancel, handler: nil)
-//        alertController.addAction(cancelAction)
-//        present(alertController, animated: true, completion: nil)
-//    }
-//
+    //MARK: - polygon method
+    func addPolygon() {
+        let polygon = MKPolygon(coordinates: locationsArr, count: locationsArr.count)
+        map.addOverlay(polygon)
+    }
+    
 //    //MARK: - rendrer for overlay func
-//    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-//        if overlay is MKCircle {
-//            let rendrer = MKCircleRenderer(overlay: overlay)
-//            rendrer.fillColor = UIColor.black.withAlphaComponent(0.5)
-//            rendrer.strokeColor = UIColor.green
-//            rendrer.lineWidth = 2
-//            return rendrer
-//        } else if overlay is MKPolyline {
-//            let rendrer = MKPolylineRenderer(overlay: overlay)
-//            rendrer.strokeColor = UIColor.orange
-//            //rendrer.lineDashPattern = transportVal == .walking ? [0,10]: []
-//            rendrer.lineWidth = 3
-//            return rendrer
-//        } else if overlay is MKPolygon {
-//            let rendrer = MKPolygonRenderer(overlay: overlay)
-//            rendrer.fillColor = UIColor.red.withAlphaComponent(0.6)
-//            rendrer.strokeColor = UIColor.yellow
-//            rendrer.lineWidth = 2
-//            return rendrer
-//        }
-//        return MKOverlayRenderer()
-//    }
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        if overlay is MKCircle {
+            let rendrer = MKCircleRenderer(overlay: overlay)
+            rendrer.fillColor = UIColor.black.withAlphaComponent(0.5)
+            rendrer.strokeColor = UIColor.green
+            rendrer.lineWidth = 2
+            return rendrer
+        } else if overlay is MKPolyline {
+            let rendrer = MKPolylineRenderer(overlay: overlay)
+            rendrer.strokeColor = UIColor.orange
+            //rendrer.lineDashPattern = transportVal == .walking ? [0,10]: []
+            rendrer.lineWidth = 3
+            return rendrer
+        } else if overlay is MKPolygon {
+            let rendrer = MKPolygonRenderer(overlay: overlay)
+            rendrer.fillColor = UIColor.red.withAlphaComponent(0.6)
+            rendrer.strokeColor = UIColor.green
+            rendrer.lineWidth = 2
+            return rendrer
+        }
+        return MKOverlayRenderer()
+    }
     
     
 
