@@ -96,7 +96,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
                     
                 }
             }
-            
             annotation.coordinate = coordinate
             map.addAnnotation(annotation)
             
@@ -108,6 +107,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
         
         if( dropPinCount == 3){
             addPolygon()
+            calculateDistanceBetweenMapPoints()
             
         }
         
@@ -119,15 +119,27 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
         if annotation is MKUserLocation {
+            
             return nil
+            
+        }else{
+            let numberRegEx  = ".*[0-9]+.*"
+            let testCase = NSPredicate(format:"SELF MATCHES %@", numberRegEx)
+            let containsNumber = testCase.evaluate(with: annotation.title)
+            
+            if(containsNumber){
+                return nil
+            }
+            else{
+                let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "droppablePin")
+                annotationView.animatesDrop = true
+                annotationView.pinTintColor = #colorLiteral(red: 0.8078431487, green: 0.02745098062, blue: 0.3333333433, alpha: 1)
+                annotationView.canShowCallout = true
+                return annotationView
+            }
         }
         
         
-        let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "droppablePin")
-        annotationView.animatesDrop = true
-        annotationView.pinTintColor = #colorLiteral(red: 0.8078431487, green: 0.02745098062, blue: 0.3333333433, alpha: 1)
-        annotationView.canShowCallout = true
-        return annotationView
         
     }
     
@@ -161,6 +173,52 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
         return MKOverlayRenderer()
     }
     
+    func calculateDistanceBetweenMapPoints(){
+        
+        
+        let coordinate1 = CLLocation(latitude: locationsArr[0].latitude, longitude: locationsArr[0].longitude)
+        let coordinate2 = CLLocation(latitude: locationsArr[1].latitude, longitude: locationsArr[1].longitude)
+        let coordinate3 = CLLocation(latitude: locationsArr[2].latitude, longitude: locationsArr[2].longitude)
+
+        let distanceInMetersFirst = Int(coordinate1.distance(from: coordinate2))
+        let distanceInMetersSecond = Int(coordinate2.distance(from: coordinate3))
+        let distanceInMetersThird = Int(coordinate3.distance(from: coordinate1))
+        
+        // display distance between first two points
+        
+        let latitudeMidOne = ((locationsArr[0].latitude + locationsArr[1].latitude) / 2)
+        let longitudeMidOne = ((locationsArr[0].longitude + locationsArr[1].longitude) / 2)
+        
+        let location1 = CLLocationCoordinate2D(latitude: latitudeMidOne, longitude: longitudeMidOne)
+        let annotation1 = MKPointAnnotation()
+        annotation1.title = String(distanceInMetersFirst) + " m"
+        annotation1.coordinate = location1
+        map.addAnnotation(annotation1)
+        
+        // display distance between second third points
+        
+        let latitudeMidTwo = ((locationsArr[1].latitude + locationsArr[2].latitude) / 2)
+        let longitudeMidTwo = ((locationsArr[1].longitude + locationsArr[2].longitude) / 2)
+        
+        let location2 = CLLocationCoordinate2D(latitude: latitudeMidTwo, longitude: longitudeMidTwo)
+        let annotation2 = MKPointAnnotation()
+        annotation2.title = String(distanceInMetersSecond) + " m"
+        annotation2.coordinate = location2
+        map.addAnnotation(annotation2)
+        
+        // display distance between second third points
+        
+        let latitudeMidThree = ((locationsArr[2].latitude + locationsArr[0].latitude) / 2)
+        let longitudeMidThree = ((locationsArr[2].longitude + locationsArr[0].longitude) / 2)
+        
+        let location3 = CLLocationCoordinate2D(latitude: latitudeMidThree, longitude: longitudeMidThree)
+        let annotation3 = MKPointAnnotation()
+        annotation3.title = String(distanceInMetersThird) + " m"
+        annotation3.coordinate = location3
+        map.addAnnotation(annotation3)
+        
+        
+    }
     
 
 
