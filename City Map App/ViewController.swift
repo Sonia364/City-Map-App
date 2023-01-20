@@ -13,7 +13,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
     var locationManager = CLLocationManager()
     var locationsArr = [CLLocationCoordinate2D]()
     @IBOutlet weak var map: MKMapView!
-    
+    @IBOutlet weak var directionBtn: UIButton!
     var dropPinCount = 1
     override func viewDidLoad() {
         
@@ -56,11 +56,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
         // 4 - set region for the map
         map.setRegion(region, animated: true)
         
-        let annotation = MKPointAnnotation()
-        annotation.title = title
-        annotation.subtitle = subtitle
-        annotation.coordinate = location
-        map.addAnnotation(annotation)
+//        let annotation = MKPointAnnotation()
+//        annotation.title = title
+//        annotation.subtitle = subtitle
+//        annotation.coordinate = location
+//        map.addAnnotation(annotation)
         
     }
     
@@ -159,7 +159,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
             return rendrer
         } else if overlay is MKPolyline {
             let rendrer = MKPolylineRenderer(overlay: overlay)
-            rendrer.strokeColor = UIColor.orange
+            rendrer.strokeColor = UIColor.blue
             //rendrer.lineDashPattern = transportVal == .walking ? [0,10]: []
             rendrer.lineWidth = 3
             return rendrer
@@ -191,10 +191,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
         
         let location1 = CLLocationCoordinate2D(latitude: latitudeMidOne, longitude: longitudeMidOne)
         let annotation1 = MKPointAnnotation()
-        annotation1.title = String(distanceInMetersFirst) + " m"
+        annotation1.title = String(distanceInMetersFirst)
+        annotation1.subtitle = "(In Meters)"
         annotation1.coordinate = location1
         map.addAnnotation(annotation1)
-        
         // display distance between second third points
         
         let latitudeMidTwo = ((locationsArr[1].latitude + locationsArr[2].latitude) / 2)
@@ -202,7 +202,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
         
         let location2 = CLLocationCoordinate2D(latitude: latitudeMidTwo, longitude: longitudeMidTwo)
         let annotation2 = MKPointAnnotation()
-        annotation2.title = String(distanceInMetersSecond) + " m"
+        annotation2.title = String(distanceInMetersSecond)
+        annotation2.subtitle = "(In Meters)"
         annotation2.coordinate = location2
         map.addAnnotation(annotation2)
         
@@ -213,13 +214,73 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
         
         let location3 = CLLocationCoordinate2D(latitude: latitudeMidThree, longitude: longitudeMidThree)
         let annotation3 = MKPointAnnotation()
-        annotation3.title = String(distanceInMetersThird) + " m"
+        annotation3.title = String(distanceInMetersThird)
+        annotation3.subtitle = "(In Meters)"
         annotation3.coordinate = location3
         map.addAnnotation(annotation3)
         
         
+        directionBtn.isHidden = false
+        
     }
     
+    //MARK: - draw route between two places
+    @IBAction func drawRoute(_ sender: UIButton) {
+        map.removeOverlays(map.overlays)
+        
+        
+        self.map.annotations.forEach {
+            print($0.subtitle)
+          if !($0 is MKUserLocation) && ($0.subtitle == "(In Meters)" ) {
+            self.map.removeAnnotation($0)
+          }
+        }
+        
+        // draw 1st route
+        fetchRoutes(_startCoordinate: locationsArr[0], _endCoordinate: locationsArr[1])
+        
+        // draw 2nd route
+        fetchRoutes(_startCoordinate: locationsArr[1], _endCoordinate: locationsArr[2])
+        
+        // draw 3rd route
+        fetchRoutes(_startCoordinate: locationsArr[2], _endCoordinate: locationsArr[0])
+        
+
+    }
+    
+    
+    func fetchRoutes(_startCoordinate : CLLocationCoordinate2D, _endCoordinate : CLLocationCoordinate2D){
+        
+        let sourcePlaceMark1 = MKPlacemark(coordinate: _startCoordinate)
+        let destinationPlaceMark2 = MKPlacemark(coordinate: _endCoordinate)
+        
+        // request a direction
+        let directionRequest = MKDirections.Request()
+        
+        // assign the source and destination properties of the request
+        directionRequest.source = MKMapItem(placemark: sourcePlaceMark1)
+        directionRequest.destination = MKMapItem(placemark: destinationPlaceMark2)
+        
+        // transportation type
+        directionRequest.transportType = .automobile
+        
+        // calculate the direction
+        let directions = MKDirections(request: directionRequest)
+        directions.calculate { (response, error) in
+            guard let directionResponse = response else {return}
+            // create the route
+            let route = directionResponse.routes[0]
+            // drawing a polyline
+            self.map.addOverlay(route.polyline, level: .aboveRoads)
+            
+            // define the bounding map rect
+            let rect = route.polyline.boundingMapRect
+            self.map.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 100, left: 100, bottom: 100, right: 100), animated: true)
+            
+//            self.map.setRegion(MKCoordinateRegion(rect), animated: true)
+        }
+        
+    }
 
 
 }
