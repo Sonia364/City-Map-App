@@ -11,9 +11,10 @@ import MapKit
 class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDelegate {
     
     var locationManager = CLLocationManager()
-    var destination: CLLocationCoordinate2D!
+    //var destination: CLLocationCoordinate2D!
     @IBOutlet weak var map: MKMapView!
     
+    var dropPinCount = 1
     override func viewDidLoad() {
         
         super.viewDidLoad()
@@ -25,8 +26,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
-        let latitude: CLLocationDegrees = 43.64
-        let longitude: CLLocationDegrees = -79.38
+      
         addSingleTap()
         
     }
@@ -64,7 +64,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
         
     }
     
-    //MARK: - double tap func
+    //MARK: - single tap func
     func addSingleTap() {
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(dropPin))
         singleTap.numberOfTapsRequired = 1
@@ -73,15 +73,37 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
     
     @objc func dropPin(sender: UITapGestureRecognizer) {
         
-        // add annotation
-        let touchPoint = sender.location(in: map)
-        let coordinate = map.convert(touchPoint, toCoordinateFrom: map)
-        let annotation = MKPointAnnotation()
-        annotation.title = "my destination"
-        annotation.coordinate = coordinate
-        map.addAnnotation(annotation)
+        if(dropPinCount <= 3){
+            // add annotation
+            let touchPoint = sender.location(in: map)
+            let coordinate = map.convert(touchPoint, toCoordinateFrom: map)
+            let annotation = MKPointAnnotation()
+            let loc: CLLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+            var address = ""
+            CLGeocoder().reverseGeocodeLocation(loc) { (placemarks, error) in
+                if error != nil {
+                    print(error!)
+                } else {
+                    if let placemark = placemarks?[0] {
+                        
+                        if placemark.locality != nil {
+                            address += placemark.locality! + "\n"
+                        }
+                        
+                        annotation.title = address
+                        
+                    }
+                    
+                }
+            }
+            
+            annotation.coordinate = coordinate
+            map.addAnnotation(annotation)
+        }
         
-        destination = coordinate
+        dropPinCount += 1
+        
+        //destination = coordinate
     }
     
     //MARK: - viewFor annotation method
@@ -91,25 +113,12 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
             return nil
         }
         
-        switch annotation.title {
-        case "my location":
-            let annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: "MyMarker")
-            annotationView.markerTintColor = UIColor.blue
-            return annotationView
-        case "my destination":
-            let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "droppablePin")
-            annotationView.animatesDrop = true
-            annotationView.pinTintColor = #colorLiteral(red: 0.8078431487, green: 0.02745098062, blue: 0.3333333433, alpha: 1)
-            return annotationView
-        case "my favorite":
-            let annotationView = map.dequeueReusableAnnotationView(withIdentifier: "customPin") ?? MKPinAnnotationView()
-            annotationView.image = UIImage(named: "ic_place_2x")
-            annotationView.canShowCallout = true
-            annotationView.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
-            return annotationView
-        default:
-            return nil
-        }
+        
+        let annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "droppablePin")
+        annotationView.animatesDrop = true
+        annotationView.pinTintColor = #colorLiteral(red: 0.8078431487, green: 0.02745098062, blue: 0.3333333433, alpha: 1)
+        annotationView.canShowCallout = true
+        return annotationView
         
     }
     
