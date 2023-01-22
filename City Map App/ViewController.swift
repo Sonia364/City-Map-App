@@ -230,7 +230,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
         
         
         self.map.annotations.forEach {
-            print($0.subtitle)
           if !($0 is MKUserLocation) && ($0.subtitle == "(In Meters)" ) {
             self.map.removeAnnotation($0)
           }
@@ -276,8 +275,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate, MKMapViewDele
             // define the bounding map rect
             let rect = route.polyline.boundingMapRect
             self.map.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 100, left: 100, bottom: 100, right: 100), animated: true)
-            
-//            self.map.setRegion(MKCoordinateRegion(rect), animated: true)
         }
         
     }
